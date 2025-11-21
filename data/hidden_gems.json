@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Rustem Pasha Mosque",
+    "location": "Istanbul",
+    "type": "Mosque",
+    "description": "A tiny, hidden gem covered in blue Iznik tiles. Much quieter than the Blue Mosque.",
+    "price": "Free"
+  },
+  {
+    "name": "Pierre Loti Hill",
+    "location": "Istanbul",
+    "type": "Viewpoint",
+    "description": "A hilltop cafe with the best views of the Golden Horn. Great for tea.",
+    "price": "Cheap"
+  },
+  {
+    "name": "Balat District",
+    "location": "Istanbul",
+    "type": "Neighborhood",
+    "description": "Colorful houses and hipster cafes. Very instagrammable and less touristy.",
+    "price": "Free"
+  }
+]
