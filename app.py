@@ -23,6 +23,40 @@ st.set_page_config(
 if 'mcp_server_process' not in st.session_state:
     st.session_state.mcp_server_process = None
 
+# Session State for Chat History
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Session State for Rate Limiting
+if "rate_limit" not in st.session_state:
+    st.session_state.rate_limit = {
+        "count": 0,
+        "start_time": time.time()
+    }
+
+def check_rate_limit():
+    """Checks if the user has exceeded the rate limit (3 requests per hour)."""
+    limit = 3
+    duration = 3600 # 1 hour
+    
+    current_time = time.time()
+    elapsed = current_time - st.session_state.rate_limit["start_time"]
+    
+    if elapsed > duration:
+        # Reset if hour has passed
+        st.session_state.rate_limit["count"] = 0
+        st.session_state.rate_limit["start_time"] = current_time
+    
+    if st.session_state.rate_limit["count"] >= limit:
+        remaining = int((duration - elapsed) / 60)
+        return False, f"Rate limit exceeded. You have used {limit} requests. Please wait {remaining} minutes."
+    
+    return True, None
+
+def increment_rate_limit():
+    """Increments the request count."""
+    st.session_state.rate_limit["count"] += 1
+
 def start_mcp_server():
     """Starts the MCP server in a background process."""
     if st.session_state.mcp_server_process is None:
@@ -58,79 +92,92 @@ with st.sidebar:
             os.environ["GOOGLE_API_KEY"] = api_key
     
     st.info("This agent uses a multi-agent system with a custom MCP server to find hidden gems.")
+    
+    # Display Rate Limit Status
+    count = st.session_state.rate_limit["count"]
+    st.metric("Requests Used (1h)", f"{count}/3")
 
 # Start Server
 with st.spinner("Starting Local MCP Server..."):
     start_mcp_server()
 
-# Main Input
-user_request = st.text_input("Where do you want to go?", placeholder="e.g., Plan a 2-day trip to Istanbul for a foodie")
+# Display Chat History
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-if st.button("Plan My Trip"):
-    if not user_request:
-        st.warning("Please enter a request first.")
+# Chat Input
+if prompt := st.chat_input("Where do you want to go? (e.g., Plan a 2-day trip to Istanbul)"):
+    # Check Rate Limit
+    allowed, error_msg = check_rate_limit()
+    
+    if not allowed:
+        st.error(error_msg)
     else:
-        try:
-            # Initialize Agents
-            with st.spinner("Initializing Agents..."):
+        # Add user message to history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Generate Response
+        with st.chat_message("assistant"):
+            try:
+                increment_rate_limit()
+                
+                # Initialize Agents
                 scout = ScoutAgent()
                 architect = ArchitectAgent()
                 critic = CriticAgent()
 
-            # Step 1: Scout
-            st.subheader("Step 1: Scouting")
-            with st.status("Scout Agent is gathering info...", expanded=True) as status:
-                scout_info = scout.send_message(f"Find key information about: {user_request}")
-                st.markdown(scout_info)
-                status.update(label="Scouting Complete", state="complete", expanded=False)
-
-            # Step 2: Architect & Critic Loop
-            st.subheader("Step 2: Planning & Critiquing")
-            
-            max_retries = 3
-            current_plan = None
-            final_plan = None
-            
-            progress_bar = st.progress(0)
-            
-            for i in range(max_retries):
-                with st.expander(f"Planning Attempt {i+1}", expanded=True):
-                    # Architect
-                    st.markdown(f"**🤖 Architect is thinking...**")
-                    if i == 0:
-                        prompt = f"Create an itinerary based on this request: '{user_request}'.\nHere is some context from the Scout:\n{scout_info}"
-                    else:
-                        prompt = f"Here is the feedback from the Critic. Please rewrite the plan to fix these issues:\n{critic_feedback}"
+                # Container for the "Thinking" process
+                with st.status("🤖 Agent is working...", expanded=False) as status:
                     
-                    current_plan = architect.send_message(prompt)
-                    st.markdown(current_plan)
+                    # Step 1: Scout
+                    st.write("🔍 **Scout** is gathering information...")
+                    scout_info = scout.send_message(f"Find key information about: {prompt}")
+                    with st.expander("See Scout Report"):
+                        st.markdown(scout_info)
                     
-                    # Critic
-                    st.markdown(f"**🧐 Critic is reviewing...**")
-                    critic_feedback = critic.send_message(f"Review this itinerary:\n{current_plan}")
-                    st.info(f"Critic's Verdict:\n{critic_feedback}")
+                    # Step 2: Architect & Critic Loop
+                    max_retries = 3
+                    current_plan = None
+                    final_plan = None
                     
-                    if "APPROVED" in critic_feedback.upper():
-                        st.success("✅ Plan Approved!")
+                    for i in range(max_retries):
+                        st.write(f"🏗️ **Architect** is planning (Attempt {i+1})...")
+                        
+                        if i == 0:
+                            plan_prompt = f"Create an itinerary based on this request: '{prompt}'.\nHere is some context from the Scout:\n{scout_info}"
+                        else:
+                            plan_prompt = f"Here is the feedback from the Critic. Please rewrite the plan to fix these issues:\n{critic_feedback}"
+                        
+                        current_plan = architect.send_message(plan_prompt)
+                        
+                        st.write(f"🧐 **Critic** is reviewing...")
+                        critic_feedback = critic.send_message(f"Review this itinerary:\n{current_plan}")
+                        
+                        with st.expander(f"Attempt {i+1} Details"):
+                            st.markdown("**Plan:**")
+                            st.markdown(current_plan)
+                            st.markdown("**Critic's Verdict:**")
+                            st.markdown(critic_feedback)
+                        
+                        if "APPROVED" in critic_feedback.upper():
+                            final_plan = current_plan
+                            status.update(label="✅ Plan Approved!", state="complete", expanded=False)
+                            break
+                        else:
+                            st.write("❌ Plan rejected, retrying...")
+                    
+                    if not final_plan:
                         final_plan = current_plan
-                        progress_bar.progress(100)
-                        break
-                    else:
-                        st.error("❌ Plan Rejected. Retrying...")
-                        progress_bar.progress(int((i + 1) / max_retries * 100))
-            
-            if final_plan:
-                st.divider()
-                st.header("🎉 Your Final Itinerary")
+                        status.update(label="⚠️ Plan finalized with warnings", state="complete", expanded=False)
+
+                # Display Final Result
                 st.markdown(final_plan)
-                st.balloons()
-            else:
-                st.warning("Could not reach a perfect plan, but here is the best version:")
-                st.markdown(current_plan)
+                
+                # Add assistant response to history
+                st.session_state.messages.append({"role": "assistant", "content": final_plan})
 
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
-# Footer
-st.markdown("---")
-st.caption("Powered by Google Gemini & Streamlit")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
