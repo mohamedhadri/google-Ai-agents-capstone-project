@@ -5,6 +5,7 @@ class ArchitectAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="Architect",
+            model_name="gemini-2.0-flash",
             system_instruction="""
             You are the Architect Agent. Your job is to create the perfect travel itinerary.
             

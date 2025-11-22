@@ -19,5 +19,68 @@
     "type": "Neighborhood",
     "description": "Colorful houses and hipster cafes. Very instagrammable and less touristy.",
     "price": "Free"
+  },
+  {
+    "name": "Ulucanlar Prison Museum",
+    "location": "Ankara",
+    "type": "Museum",
+    "description": "A former state prison turned museum, offering a deep dive into Turkey's political history.",
+    "price": "Moderate"
+  },
+  {
+    "name": "Hamamönü",
+    "location": "Ankara",
+    "type": "Neighborhood",
+    "description": "A restored Ottoman-era district with traditional houses, handicrafts, and cafes.",
+    "price": "Free"
+  },
+  {
+    "name": "Kuğulu Park",
+    "location": "Ankara",
+    "type": "Park",
+    "description": "A peaceful park in the city center famous for its swans and relaxing atmosphere.",
+    "price": "Free"
+  },
+  {
+    "name": "Vazelon Monastery",
+    "location": "Trabzon",
+    "type": "Monastery",
+    "description": "An ancient cliffside monastery, older and less crowded than Sumela, offering solitude and views.",
+    "price": "Free"
+  },
+  {
+    "name": "Çal Cave",
+    "location": "Trabzon",
+    "type": "Nature",
+    "description": "One of the world's longest caves with a stream running through it and impressive formations.",
+    "price": "Moderate"
+  },
+  {
+    "name": "Sera Lake",
+    "location": "Trabzon",
+    "type": "Nature",
+    "description": "A tranquil landslide-formed lake with emerald waters, perfect for boating and picnics.",
+    "price": "Free"
+  },
+  {
+    "name": "Kaymakli Underground City",
+    "location": "Cappadocia",
+    "type": "Historical Site",
+    "description": "A vast underground city with eight floors, offering a glimpse into ancient subterranean life.",
+    "price": "Moderate"
+  },
+  {
+    "name": "Soğanlı Valley",
+    "location": "Cappadocia",
+    "type": "Valley",
+    "description": "A serene valley with rock-cut churches and pigeon houses, away from the main tourist crowds.",
+    "price": "Cheap"
+  },
+  {
+    "name": "Selime Monastery",
+    "location": "Cappadocia",
+    "type": "Monastery",
+    "description": "The largest rock-cut monastery in Cappadocia, featuring a cathedral and panoramic views.",
+    "price": "Moderate"
   }
 ]

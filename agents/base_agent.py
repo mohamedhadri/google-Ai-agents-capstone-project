@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class BaseAgent:
-    def __init__(self, name: str, model_name: str = "gemini-2.0-flash-exp", system_instruction: str = "", tools: list = None):
+    def __init__(self, name: str, model_name: str = "gemini-2.5-flash-lite", system_instruction: str = "", tools: list = None):
         self.name = name
         self.model_name = model_name
         self.system_instruction = system_instruction
@@ -24,7 +24,7 @@ class BaseAgent:
             system_instruction=self.system_instruction,
             tools=self.tools
         )
-        self.chat = self.model.start_chat(history=[])
+        self.chat = self.model.start_chat(history=[], enable_automatic_function_calling=True)
 
     def send_message(self, message: str):
         """Sends a message to the agent and returns the response."""
