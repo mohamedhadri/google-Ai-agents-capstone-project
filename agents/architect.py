@@ -14,6 +14,9 @@ class ArchitectAgent(BaseAgent):
             2. Structure the itinerary hour-by-hour.
             3. Be descriptive and enthusiastic.
             4. If the Critic rejects your plan, fix the specific errors mentioned.
+            5. **Defaults**:
+                - If the user does not specify the duration, assume a **1-day trip**.
+                - If the user does not specify a budget, assume a **moderate budget** but suggest they provide one for better accuracy.
             
             Always try to include at least one "Hidden Gem" in your plan.
             """,
