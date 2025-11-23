@@ -3,7 +3,9 @@
 ### Google AI Agents Capstone Project
 
 **Track:** Concierge Agents
-**Author:** [Your Name]
+**Author:** Mohamed Hadri
+
+![App Screenshot](assets/app_screenshot.png)
 
 ## Overview
 
@@ -15,11 +17,13 @@
     - **Scout**: Gathers raw information.
     - **Architect**: Plans the itinerary.
     - **Critic**: Validates the plan (Loop Agent).
+    - **Guard**: Filters off-topic requests and handles greetings.
 2.  **Tools & MCP**:
     - **Custom MCP Server**: A local FastAPI server providing "Hidden Gems" data.
     - **Search Tool**: For real-time info.
 3.  **Sessions & Memory**:
     - Agents maintain history context throughout the planning loop.
+    - The system remembers the current plan for iterative improvements.
 
 ## Setup & Run
 
@@ -38,12 +42,12 @@
 
 3.  **Run the Agent**:
     ```bash
-    python main.py
+    streamlit run app.py
     ```
 
 ## Architecture
 
-- `main.py`: Orchestrates the agent loop and manages the MCP server process.
-- `agents/`: Contains the `BaseAgent` (ADK-style wrapper) and specialized agents.
+- `app.py`: The main Streamlit web application (UI) and agent orchestrator.
+- `agents/`: Contains the `BaseAgent` (ADK-style wrapper) and specialized agents (`Scout`, `Architect`, `Critic`, `Guard`).
 - `tools/`: Contains the MCP server (`mcp_server.py`) and client tools.
 - `data/`: Contains the JSON database for the MCP server.
