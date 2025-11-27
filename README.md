@@ -4,6 +4,9 @@
 
 **Track:** Concierge Agents
 **Author:** Mohamed Hadri
+**Live Demo:** [Launch App 🚀](https://app-ai-agents-capstone-project.streamlit.app/)
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-ai-agents-capstone-project.streamlit.app/)
 
 ## Overview
 
