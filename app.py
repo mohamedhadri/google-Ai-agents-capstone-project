@@ -8,6 +8,8 @@ from agents.scout import ScoutAgent
 from agents.architect import ArchitectAgent
 from agents.critic import CriticAgent
 from agents.guard import GuardAgent
+from agents.summary import SummaryAgent
+from utils.memory import MemoryManager
 from dotenv import load_dotenv
 
 # Load env vars
@@ -35,9 +37,21 @@ if "rate_limit" not in st.session_state:
         "start_time": time.time()
     }
 
+import uuid
+
 # Session State for Current Plan (Memory)
 if "current_plan" not in st.session_state:
     st.session_state.current_plan = None
+
+# Session State for Session Title
+if "session_title" not in st.session_state:
+    st.session_state.session_title = None
+
+# Initialize Memory Manager
+if "memory_manager" not in st.session_state:
+    st.session_state.memory_manager = MemoryManager()
+    st.session_state.memory_context = st.session_state.memory_manager.get_memory_context()
+    st.session_state.session_id = str(uuid.uuid4())
 
 def check_rate_limit():
     """Checks if the user has exceeded the rate limit (3 requests per hour)."""
@@ -102,6 +116,49 @@ with st.sidebar:
     count = st.session_state.rate_limit["count"]
     st.metric("Requests Used (1h)", f"{count}/3")
 
+    st.divider()
+    st.header("History")
+    
+    # New Chat Button
+    if st.button("➕ New Chat", use_container_width=True):
+        st.session_state.session_id = str(uuid.uuid4())
+        st.session_state.messages = []
+        st.session_state.current_plan = None
+        st.session_state.session_title = None
+        st.rerun()
+    
+    # List Previous Sessions
+    sessions = st.session_state.memory_manager.load_memory()
+    # Show most recent first
+    for s in reversed(sessions):
+        # Get Session ID safely
+        session_id = s.get("session_id")
+        if not session_id:
+            continue
+
+        # Determine title
+        title = s.get("title")
+        if not title:
+            # Fallback to timestamp or first message
+            title = s["timestamp"]
+            if s["messages"]:
+                for m in s["messages"]:
+                    if m["role"] == "user":
+                        # Truncate to 30 chars
+                        content = m["content"]
+                        title = (content[:27] + '...') if len(content) > 27 else content
+                        break
+        
+        # Highlight current session
+        type_ = "primary" if session_id == st.session_state.session_id else "secondary"
+        
+        if st.button(title, key=session_id, use_container_width=True, type=type_):
+            st.session_state.session_id = session_id
+            st.session_state.messages = s["messages"]
+            st.session_state.current_plan = None # Reset plan state
+            st.session_state.session_title = s.get("title")
+            st.rerun()
+
 # Start Server
 with st.spinner("Starting Local MCP Server..."):
     start_mcp_server()
@@ -130,7 +187,7 @@ if prompt := st.chat_input("Where do you want to go? (e.g., Plan a 2-day trip to
                 increment_rate_limit()
                 
                 # Initialize Guard
-                guard = GuardAgent()
+                guard = GuardAgent(memory_context=st.session_state.memory_context)
                 with st.spinner("Thinking..."):
                     # Pass current plan context to Guard if available
                     guard_prompt = prompt
@@ -149,11 +206,18 @@ if prompt := st.chat_input("Where do you want to go? (e.g., Plan a 2-day trip to
                 if action == "CHAT":
                     st.markdown(guard_response)
                     st.session_state.messages.append({"role": "assistant", "content": guard_response})
+                    
+                    # Generate Title if needed
+                    if not st.session_state.session_title and len(st.session_state.messages) >= 2:
+                        summary_agent = SummaryAgent()
+                        st.session_state.session_title = summary_agent.generate_title(st.session_state.messages)
+                    
+                    st.session_state.memory_manager.save_session(st.session_state.session_id, st.session_state.messages, st.session_state.session_title)
                 
                 else:
                     # Initialize Agents
                     scout = ScoutAgent()
-                    architect = ArchitectAgent()
+                    architect = ArchitectAgent(memory_context=st.session_state.memory_context)
                     critic = CriticAgent()
 
                     # Container for the "Thinking" process
@@ -218,6 +282,13 @@ if prompt := st.chat_input("Where do you want to go? (e.g., Plan a 2-day trip to
                     
                     # Add assistant response to history
                     st.session_state.messages.append({"role": "assistant", "content": final_plan})
+                    
+                    # Generate Title if needed
+                    if not st.session_state.session_title:
+                        summary_agent = SummaryAgent()
+                        st.session_state.session_title = summary_agent.generate_title(st.session_state.messages)
+                        
+                    st.session_state.memory_manager.save_session(st.session_state.session_id, st.session_state.messages, st.session_state.session_title)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")

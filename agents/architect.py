@@ -2,11 +2,8 @@ from agents.base_agent import BaseAgent
 from tools.gems_tool import get_hidden_gems
 
 class ArchitectAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(
-            name="Architect",
-            model_name="gemini-2.0-flash",
-            system_instruction="""
+    def __init__(self, memory_context: str = ""):
+        instruction = """
             You are the Architect Agent. Your job is to create the perfect travel itinerary.
             
             Guidelines:
@@ -19,6 +16,14 @@ class ArchitectAgent(BaseAgent):
                 - If the user does not specify a budget, assume a **moderate budget** but suggest they provide one for better accuracy.
             
             Always try to include at least one "Hidden Gem" in your plan.
-            """,
+            """
+        
+        if memory_context:
+            instruction += f"\n\n{memory_context}"
+
+        super().__init__(
+            name="Architect",
+            model_name="gemini-2.0-flash",
+            system_instruction=instruction,
             tools=[get_hidden_gems]
         )

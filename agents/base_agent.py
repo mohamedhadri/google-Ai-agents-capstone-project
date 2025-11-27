@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class BaseAgent:
-    def __init__(self, name: str, model_name: str = "gemini-2.5-flash-lite", system_instruction: str = "", tools: list = None):
+    def __init__(self, name: str, model_name: str = "gemini-2.0-flash", system_instruction: str = "", tools: list = None):
         self.name = name
         self.model_name = model_name
         self.system_instruction = system_instruction

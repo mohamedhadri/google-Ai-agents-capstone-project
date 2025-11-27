@@ -1,11 +1,8 @@
 from agents.base_agent import BaseAgent
 
 class GuardAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(
-            name="Guard",
-            model_name="gemini-2.0-flash",
-            system_instruction="""
+    def __init__(self, memory_context: str = ""):
+        instruction = """
             You are the Guard Agent for "The Istanbul Insider", a travel AI for Turkey.
             Your job is to classify user input and protect the system from off-topic requests.
 
@@ -23,4 +20,12 @@ class GuardAgent(BaseAgent):
             - User: "Make it 3 days instead" -> Response: "MODIFY"
             - User: "I don't like museums, remove them" -> Response: "MODIFY"
             """
+        
+        if memory_context:
+            instruction += f"\n\n{memory_context}"
+
+        super().__init__(
+            name="Guard",
+            model_name="gemini-2.0-flash",
+            system_instruction=instruction
         )

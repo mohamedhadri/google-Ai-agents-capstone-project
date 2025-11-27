@@ -5,11 +5,11 @@
 **Track:** Concierge Agents
 **Author:** Mohamed Hadri
 
-![App Screenshot](assets/app_screenshot.png)
-
 ## Overview
 
 "The Istanbul Insider" is a multi-agent travel orchestrator that goes beyond simple itinerary generation. It features a **Self-Correcting Loop** where a "Critic Agent" validates plans against real-world logic, and a **Local MCP Server** that injects private "Hidden Gem" knowledge that standard LLMs might miss.
+
+![App Screenshot](assets/app_demo.webp)
 
 ## Key Features (Course Concepts Applied)
 
@@ -45,9 +45,42 @@
     streamlit run app.py
     ```
 
-## Architecture
+## System Architecture & Flow
 
-- `app.py`: The main Streamlit web application (UI) and agent orchestrator.
-- `agents/`: Contains the `BaseAgent` (ADK-style wrapper) and specialized agents (`Scout`, `Architect`, `Critic`, `Guard`).
-- `tools/`: Contains the MCP server (`mcp_server.py`) and client tools.
-- `data/`: Contains the JSON database for the MCP server.
+The system follows a **Hub-and-Spoke** architecture with a **Self-Correcting Planning Loop**.
+
+### 1. Input Processing & Routing
+
+- **User** enters a request via the **Streamlit UI**.
+- **Guard Agent** intercepts every message to classify intent:
+  - `CHAT`: Handles greetings and off-topic questions directly.
+  - `NEW_PLAN`: Triggers the full planning sequence.
+  - `MODIFY`: Triggers a plan update using existing context.
+
+### 2. The Planning Loop (Orchestration)
+
+If the Guard detects a planning intent, the **Streamlit Orchestrator** (`app.py`) initiates the agent workflow:
+
+1.  **Scout Phase** (Only for `NEW_PLAN`):
+    - **Scout Agent** uses `google_search` to gather real-time data (weather, opening hours, events).
+    - This raw context is passed to the Architect.
+
+2.  **Architect Phase**:
+    - **Architect Agent** drafts a detailed itinerary.
+    - **Tool Usage**: Calls the **MCP Server** (via `get_hidden_gems`) to inject unique local recommendations that aren't in the standard training data.
+
+3.  **Critic Phase (Verification Loop)**:
+    - **Critic Agent** reviews the Architect's draft for logical errors (e.g., impossible travel times, closed venues).
+    - **Feedback**: If rejected, the Critic sends specific feedback back to the Architect.
+    - **Retry**: The Architect revises the plan. This loop repeats up to 3 times or until approved.
+
+### 3. Memory & State Management
+
+- **Memory Manager**: Persists chat history and session metadata to `data/history.json`.
+- **Summary Agent**: Asynchronously generates concise titles for new sessions.
+- **State**: The `current_plan` is stored in the session state, allowing the user to ask for modifications ("Make it 3 days instead") without restarting the process.
+
+### 4. Tooling Layer
+
+- **MCP Server**: A standalone FastAPI service (`tools/mcp_server.py`) running on port 8000. It serves structured data from `data/hidden_gems.json`.
+- **Google Search**: Used by Scout and Critic for ground-truthing.
