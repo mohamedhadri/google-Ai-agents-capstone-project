@@ -23,7 +23,7 @@ class ArchitectAgent(BaseAgent):
 
         super().__init__(
             name="Architect",
-            model_name="gemini-1.5-pro",
+            model_name="gemini-2.0-flash",
             system_instruction=instruction,
             tools=[get_hidden_gems]
         )
