@@ -84,3 +84,15 @@ If the Guard detects a planning intent, the **Streamlit Orchestrator** (`app.py`
 
 - **MCP Server**: A standalone FastAPI service (`tools/mcp_server.py`) running on port 8000. It serves structured data from `data/hidden_gems.json`.
 - **Google Search**: Used by Scout and Critic for ground-truthing.
+
+## Visual Workflow
+
+The following flowchart illustrates the end-to-end process, from the user's initial request to the final validated itinerary. It highlights the interaction between the **Guard**, **Scout**, **Architect**, and **Critic** agents, as well as the integration of the **MCP Server** for local knowledge.
+
+![Agent Workflow Diagram](image.png)
+
+## 🌟 Give it a Star
+
+If you found this project interesting or helpful, please consider giving it a star on GitHub! It helps others discover the project and motivates me to keep improving it.
+
+[![GitHub stars](https://img.shields.io/github/stars/mohamedhadri/capstone-2?style=social)](https://github.com/mohamedhadri/capstone-2)
