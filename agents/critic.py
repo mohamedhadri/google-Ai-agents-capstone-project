@@ -5,7 +5,7 @@ class CriticAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="Critic",
-            model_name="gemini-2.0-flash",
+            model_name="gemini-1.5-pro",
             system_instruction="""
             You are the Critic Agent. Your job is to review travel itineraries for LOGICAL ERRORS.
             You do not create plans. You break them.
